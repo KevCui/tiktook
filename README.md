@@ -1,7 +1,7 @@
 TikTook
 =======
 
-> Take TikTok videos to your local machine 
+> Take TikTok videos to your local machine
 
 ## Features
 
@@ -9,8 +9,8 @@ TikTook
 - No need to register TikTok API
 - Download covers and videos from TikTok directly
 - Download json data, including profile data, cover/video data...
-- Skip image download, or/and video download, or/and json data download
-- Set time period to download only contents which were published in this period
+- Toggle cover image download, or/and video download, or/and json data download
+- Download only contents published in any time period
 
 ## Dependency
 
