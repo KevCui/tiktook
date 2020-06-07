@@ -34,7 +34,7 @@ set_var() {
     _SIGN_SCRIPT="$_SCRIPT_PATH/bin/sign.js"
     _DOWNLOAD_COOKIE_SCRIPT="$_SCRIPT_PATH/putility/putility.js"
 
-    if [[ "$(is_token_expired "$_TOKEN_FILE")" == "yes" ]]; then
+    if [[ "$(is_token_expired "$_TOKEN_FILE" "+7 days")" == "yes" ]]; then
         _VERIFYFP_TOKEN=$(get_cookie "$_HOST" "$_USER_AGENT" "$_CHROME" | $_JQ -r '.[] | select (.name=="s_v_web_id") | .value' | tee "$_TOKEN_FILE")
     else
         print_info "Vaild token exits in $_TOKEN_FILE"
@@ -157,14 +157,23 @@ check_arg() {
 
 is_token_expired() {
     # $1: token file
+    # $2: time to expire
     local o
     o="yes"
     if [[ -f "$1" && -s "$1" ]]; then
         local d n
-        d=$(date -d "$(date -r "$1") +7 days" +%s)
+        d=$(date -d "$(date -r "$1") $2" +%s)
         n=$(date +%s)
         [[ "$n" -lt "$d" ]] && o="no"
     fi
+    echo "$o"
+}
+
+is_item_list_empty() {
+    # $1: item list json data
+    local o
+    o="yes"
+    [[ "$($_JQ -r '. | has("items")' <<< "$1")" == "true" ]] && o="no"
     echo "$o"
 }
 
@@ -183,12 +192,12 @@ download_content() {
             [[ "$_SKIP_JSON_DATA" == false ]] && echo "$j" > "$_DATA_DIR/${id}.json"
 
             if [[ "$_SKIP_COVER" == false ]]; then
-                print_info ">>  Downloading cover $id"
+                print_info ">> Downloading cover $id"
                 $_CURL -L -g -o "$_COVER_DIR/${id}.gif" "$c"
             fi
 
             if [[ "$_SKIP_VIDEO" == false ]]; then
-                print_info ">>  Downloading video $id"
+                print_info ">> Downloading video $id"
                 $_CURL -L -g -o "$_VIDEO_DIR/${id}.mp4" "$v"
             fi
          else
@@ -282,7 +291,7 @@ main() {
         print_info "maxCursor: $maxcur"
         res=$(get_item "$uid" "$appid" "$secuid" "$region" "$maxcur" "$_VERIFYFP_TOKEN" "$_USER_AGENT")
         [[ -z "$res" ]] && print_error "Empty response!"
-        if [[ "$($_JQ -r '. | has("items")' <<< "$res")" == "true" ]]; then
+        if [[ $(is_item_list_empty "$res") == "no" ]]; then
             download_content "$res"
             maxcur="$($_JQ -r '.maxCursor' <<< "$res")"
         else
