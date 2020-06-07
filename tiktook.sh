@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Take TikTok videos to local
+# Take TikTok videos to your local machine 
 #
 #/ Usage:
 #/   ./tiktook.sh -u <username> [-d] [-c] [-v] [-f <yyyymmdd>] [-t <yyyymmdd>]

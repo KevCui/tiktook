@@ -1,7 +1,7 @@
 TikTook
 =======
 
-> Take TikTok videos to local
+> Take TikTok videos to your local machine 
 
 ## Features
 
