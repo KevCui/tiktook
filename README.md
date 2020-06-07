@@ -11,7 +11,6 @@ TikTook
 - Download json data, including profile data, cover/video data...
 - Skip image download, or/and video download, or/and json data download
 - Set time period to download only contents which were published in this period
--
 
 ## Dependency
 
