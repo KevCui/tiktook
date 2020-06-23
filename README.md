@@ -1,7 +1,16 @@
-TikTook
-=======
+# TikTook
 
 > Take TikTok videos to your local machine
+
+## Table of Contents
+
+- [Features](#features)
+- [Dependency](#dependency)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Example](#example)
+- [How to run tests](#how-to-run-tests)
+- [Disclaimer](#disclaimer)
 
 ## Features
 
