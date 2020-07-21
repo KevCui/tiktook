@@ -1,4 +1,4 @@
-# TikTook
+# TikTook ![CI](https://github.com/KevCui/tiktook/workflows/CI/badge.svg)
 
 > Take TikTok videos to your local machine
 
