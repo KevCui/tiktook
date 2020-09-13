@@ -70,3 +70,7 @@ Options:
 ## Disclaimer
 
 The purpose of this script is to download media contents from TikTok in order to backup and archive them. Please do NOT copy or distribute downloaded contents to others. Please do remember that the copyright of contents always belongs to the owner of TikTok account. Please use this script at your own responsibility.
+
+---
+
+<a href="https://www.buymeacoffee.com/kevcui" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-orange.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
