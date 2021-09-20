@@ -142,35 +142,6 @@ setup() {
     [ "$output" == "<" ]
 }
 
-@test "CHECK: is_token_expired(): yes, file doesn't exist" {
-    run is_token_expired "$(date +%s)" "+1 year"
-    [ "$status" -eq 0 ]
-    [ "$output" = "yes" ]
-}
-
-@test "CHECK: is_token_expired(): yes empty file" {
-    tmpfile=$(mktemp)
-    run is_token_expired "$tmpfile" "+1 month"
-    [ "$status" -eq 0 ]
-    [ "$output" = "yes" ]
-}
-
-@test "CHECK: is_token_expired(): yes, expired" {
-    tmpfile=$(mktemp)
-    echo "test" > "$tmpfile"
-    run is_token_expired "$tmpfile" "-1 hour"
-    [ "$status" -eq 0 ]
-    [ "$output" = "yes" ]
-}
-
-@test "CHECK: is_token_expired(): no" {
-    tmpfile=$(mktemp)
-    echo "test" > "$tmpfile"
-    run is_token_expired "$tmpfile" "+1 min"
-    [ "$status" -eq 0 ]
-    [ "$output" = "no" ]
-}
-
 @test "CHECK: is_item_list_empty: item list" {
     run is_item_list_empty "$(< $_ITEM_JSON_FILE)"
     [ "$status" -eq 0 ]
@@ -190,11 +161,11 @@ setup() {
     [ "${lines[0]}" = "[32m[INFO][0m >> Downloading cover 111222333" ]
     [ "${lines[1]}" = "-L -g -o /tmp/cover/111222333.gif v123/dynamicCover/link" ]
     [ "${lines[2]}" = "[32m[INFO][0m >> Downloading video 111222333" ]
-    [ "${lines[3]}" = "-L -g -o /tmp/video/111222333.mp4 v123/downloadAddr/link" ]
+    [ "${lines[3]}" = "-L -g -o /tmp/video/111222333.mp4 -H Referer: v123/downloadAddr/link v123/downloadAddr/link" ]
     [ "${lines[4]}" = "[32m[INFO][0m >> Downloading cover 111222334" ]
     [ "${lines[5]}" = "-L -g -o /tmp/cover/111222334.gif v124/dynamicCover/link" ]
     [ "${lines[6]}" = "[32m[INFO][0m >> Downloading video 111222334" ]
-    [ "${lines[7]}" = "-L -g -o /tmp/video/111222334.mp4 v124/downloadAddr/link" ]
+    [ "${lines[7]}" = "-L -g -o /tmp/video/111222334.mp4 -H Referer: v124/downloadAddr/link v124/downloadAddr/link" ]
     [ "${lines[8]}" = "[32m[INFO][0m Skip download: media isn't published in the time period 11111010-22221010" ]
 }
 
@@ -216,9 +187,9 @@ setup() {
     run download_content "$(< $_ITEM_JSON_FILE)"
     [ "$status" -eq 0 ]
     [ "${lines[0]}" = "[32m[INFO][0m >> Downloading video 111222333" ]
-    [ "${lines[1]}" = "-L -g -o /tmp/video/111222333.mp4 v123/downloadAddr/link" ]
+    [ "${lines[1]}" = "-L -g -o /tmp/video/111222333.mp4 -H Referer: v123/downloadAddr/link v123/downloadAddr/link" ]
     [ "${lines[2]}" = "[32m[INFO][0m >> Downloading video 111222334" ]
-    [ "${lines[3]}" = "-L -g -o /tmp/video/111222334.mp4 v124/downloadAddr/link" ]
+    [ "${lines[3]}" = "-L -g -o /tmp/video/111222334.mp4 -H Referer: v124/downloadAddr/link v124/downloadAddr/link" ]
     [ "${lines[4]}" = "[32m[INFO][0m Skip download: media isn't published in the time period 11111010-22221010" ]
 }
 
@@ -229,6 +200,6 @@ setup() {
     [ "${lines[0]}" = "[32m[INFO][0m >> Downloading cover 111222333" ]
     [ "${lines[1]}" = "-L -g -o /tmp/cover/111222333.gif v123/dynamicCover/link" ]
     [ "${lines[2]}" = "[32m[INFO][0m >> Downloading video 111222333" ]
-    [ "${lines[3]}" = "-L -g -o /tmp/video/111222333.mp4 v123/downloadAddr/link" ]
+    [ "${lines[3]}" = "-L -g -o /tmp/video/111222333.mp4 -H Referer: v123/downloadAddr/link v123/downloadAddr/link" ]
     [ "${lines[4]}" = "[32m[INFO][0m Skip further download: media are published earlier than 22221009" ]
 }

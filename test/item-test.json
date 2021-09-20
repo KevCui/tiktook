@@ -1,34 +1,39 @@
 {
-    "statusCode": 0,
-    "items": [
-        {
-            "id": "111222333",
-            "createTime": 22221010,
-            "video": {
-                "id": "v123",
-                "dynamicCover": "v123/dynamicCover/link",
-                "downloadAddr": "v123/downloadAddr/link"
-            }
-        },
-        {
-            "id": "111222334",
-            "createTime": 12221010,
-            "video": {
-                "id": "v124",
-                "dynamicCover": "v124/dynamicCover/link",
-                "downloadAddr": "v124/downloadAddr/link"
-            }
-        },
-        {
-            "id": "111222335",
-            "createTime": 32221010,
-            "video": {
-                "id": "v125",
-                "dynamicCover": "v125/dynamicCover/link",
-                "downloadAddr": "v125/downloadAddr/link"
-            }
+  "statusCode": 0,
+  "body": {
+    "itemListData": [
+      {
+        "itemInfos": {
+          "id": "111222333",
+          "createTime": 22221010,
+          "coversDynamic": ["v123/dynamicCover/link"],
+          "video": {
+            "urls": ["v123/downloadAddr/link"]
+          }
         }
+      },
+      {
+        "itemInfos": {
+          "id": "111222334",
+          "createTime": 12221010,
+          "coversDynamic": ["v124/dynamicCover/link"],
+          "video": {
+            "urls": ["v124/downloadAddr/link"]
+          }
+        }
+      },
+      {
+        "itemInfos": {
+          "id": "111222335",
+          "createTime": 32221010,
+          "coversDynamic": ["v125/dynamicCover/link"],
+          "video": {
+            "urls": ["v125/downloadAddr/link"]
+          }
+        }
+      }
     ],
     "maxCursor": "999",
     "minCursor": "000"
+  }
 }

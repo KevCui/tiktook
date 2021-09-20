@@ -6,7 +6,6 @@
 
 - [Features](#features)
 - [Dependency](#dependency)
-- [Installation](#installation)
 - [Usage](#usage)
   - [Example](#example)
 - [How to run tests](#how-to-run-tests)
@@ -25,18 +24,6 @@
 
 - [curl](https://curl.haxx.se/download.html)
 - [jq](https://stedolan.github.io/jq/download/)
-- [putility](https://github.com/KevCui/pUtility)
-
-## Installation
-
-```bash
-~$ git clone https://github.com/KevCui/tiktook.git
-~$ cd tiktook
-~$ git submodule init
-~$ git submodule update
-~$ cd putility
-~$ npm i puppeteer-core commander
-```
 
 ## Usage
 
@@ -58,13 +45,13 @@ Options:
 - Download all videos since `1 Jun 2016`, from `@tiktok` account:
 
 ```bash
-~$ ./tiktook.sh -u tiktok -f 20200601
+$ ./tiktook.sh -u tiktok -f 20200601
 ```
 
 ## How to run tests
 
 ```bash
-~$ bats test/tiktook.bats
+$ bats test/tiktook.bats
 ```
 
 ## Disclaimer

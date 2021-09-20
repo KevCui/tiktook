@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Take TikTok videos to your local machine 
+# Take TikTok videos to your local machine
 #
 #/ Usage:
 #/   ./tiktook.sh -u <username> [-d] [-c] [-v] [-f <yyyymmdd>] [-t <yyyymmdd>]
@@ -22,24 +22,16 @@ usage() {
 
 set_var() {
     _HOST="https://www.tiktok.com"
-    _ITEM_API="https://m.tiktok.com/api/item_list/?count=30&type=1&minCursor=0&sourceType=8&language=en"
-    _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+    _ITEM_API="https://m.tiktok.com/share/item/list?count=30&type=1&minCursor=0&shareUid=&lang="
+    _USER_AGENT="tiktok"
+    _COOKIE="tt_webid=tiktok"
     _SCRIPT_PATH=$(dirname "$0")
     _TIME_STAMP=$(date +%s)
-    _TOKEN_FILE="$_SCRIPT_PATH/token"
     _OUT_DIR="${_SCRIPT_PATH}/${_USER_NAME}_${_TIME_STAMP}"
     _DATA_DIR="$_OUT_DIR/data"
     _COVER_DIR="$_OUT_DIR/cover"
     _VIDEO_DIR="$_OUT_DIR/video"
     _SIGN_SCRIPT="$_SCRIPT_PATH/bin/sign.js"
-    _DOWNLOAD_COOKIE_SCRIPT="$_SCRIPT_PATH/putility/putility.js"
-
-    if [[ "$(is_token_expired "$_TOKEN_FILE" "+7 days")" == "yes" ]]; then
-        _VERIFYFP_TOKEN=$(get_cookie "$_HOST" "$_USER_AGENT" "$_CHROME" | $_JQ -r '.[] | select (.name=="s_v_web_id") | .value' | tee "$_TOKEN_FILE")
-    else
-        print_info "Vaild token exits in $_TOKEN_FILE"
-        _VERIFYFP_TOKEN=$(< "$_TOKEN_FILE")
-    fi
 
     mkdir -p "$_OUT_DIR"
     [[ "$_SKIP_JSON_DATA" == false ]] && mkdir -p "$_DATA_DIR"
@@ -59,7 +51,6 @@ set_var() {
 }
 
 set_command() {
-    _CHROME="$(command -v chrome || command -v chromium)" || command_not_found "chrome/chromium" ""
     _CURL="$(command -v curl)" || command_not_found "curl" "https://curl.haxx.se/download.html"
     _JQ="$(command -v jq)" || command_not_found "jq" "https://stedolan.github.io/jq/download/"
 }
@@ -155,38 +146,24 @@ check_arg() {
     fi
 }
 
-is_token_expired() {
-    # $1: token file
-    # $2: time to expire
-    local o
-    o="yes"
-    if [[ -f "$1" && -s "$1" ]]; then
-        local d n
-        d=$(date -d "$(date -r "$1") $2" +%s)
-        n=$(date +%s)
-        [[ "$n" -lt "$d" ]] && o="no"
-    fi
-    echo "$o"
-}
-
 is_item_list_empty() {
     # $1: item list json data
     local o
     o="yes"
-    [[ "$($_JQ -r '. | has("items")' <<< "$1")" == "true" ]] && o="no"
+    [[ "$($_JQ -r '.body | has("itemListData")' <<< "$1")" == "true" ]] && o="no"
     echo "$o"
 }
 
 download_content() {
     # $1: item list json data
     local l j id c v
-    l=$($_JQ -r '.items | length' <<< "$1")
+    l=$($_JQ -r '.body.itemListData | length' <<< "$1")
     for (( i = 0; i < l; i++ )); do
-        j=$($_JQ -r '.items[$i | tonumber]' --arg i "$i" <<< "$1")
-        id=$($_JQ -r '.id' <<< "$j")
-        ts=$($_JQ -r '.createTime' <<< "$j")
-        c=$($_JQ -r '.video.dynamicCover' <<< "$j")
-        v=$($_JQ -r '.video.downloadAddr' <<< "$j")
+        j=$($_JQ -r '.body.itemListData[$i | tonumber]' --arg i "$i" <<< "$1")
+        id=$($_JQ -r '.itemInfos.id' <<< "$j")
+        ts=$($_JQ -r '.itemInfos.createTime' <<< "$j")
+        c=$($_JQ -r '.itemInfos.coversDynamic[0]' <<< "$j")
+        v=$($_JQ -r '.itemInfos.video.urls[0]' <<< "$j")
 
         if [[ $(compare_time "$ts" "$_FROM_DATE_UNIXTIME") != "<" && $(compare_time "$ts" "$_TO_DATE_UNIXTIME") != ">" ]]; then
             [[ "$_SKIP_JSON_DATA" == false ]] && echo "$j" > "$_DATA_DIR/${id}.json"
@@ -198,7 +175,7 @@ download_content() {
 
             if [[ "$_SKIP_VIDEO" == false ]]; then
                 print_info ">> Downloading video $id"
-                $_CURL -L -g -o "$_VIDEO_DIR/${id}.mp4" "$v"
+                $_CURL -L -g -o "$_VIDEO_DIR/${id}.mp4" -H "Referer: $v" "$v"
             fi
          else
             if [[ $(compare_time "$ts" "$_FROM_DATE_UNIXTIME") == "<" ]]; then
@@ -230,15 +207,16 @@ get_user_data() {
     else
         u="@$1"
     fi
-    $_CURL -sS "$_HOST/node/share/user/${u}?request_from=server&isUniqueId=true&sec_uid=" \
-        -H "User-Agent: $_USER_AGENT"
+    $_CURL -sS "$_HOST/${u}" -H "User-Agent: $_USER_AGENT" \
+    | grep '"props":' \
+    | sed -E 's/.*\{"props"/{"props"/' \
+    | sed -E 's/\}<.*/}/' \
+    | jq -r
 }
 
-get_cookie() {
-    # $1: URL
-    # $2: user agent
-    # $3: chrome/chromium path
-    $_DOWNLOAD_COOKIE_SCRIPT "$1" -u "$2" -p "$3" -c cookie
+json_path() {
+    # $1: JSON data
+    jq -r 'paths(scalars) as $p | "." + ([([$p[] | tostring] | join(".")), (getpath($p) | tojson)] | join(": "))'
 }
 
 get_signature() {
@@ -249,18 +227,19 @@ get_signature() {
 
 get_item() {
     # $1: id
-    # $2: appid
-    # $3: secUid
-    # $4: region code
-    # $5: maxCursor
-    # $6: verifyFp token
-    # $7: user agent
+    # $2: secUid
+    # $3: maxCursor
+    # $4: user agent
     local u s l
-    u="${_ITEM_API}&id=${1}&appId=${2}&secUid=${3}&region=${4}&maxCursor=${5}&verifyFp=${6}"
-    s=$(get_signature "$u" "$7")
+    u="${_ITEM_API}&id=${1}&secUid=${2}&maxCursor=${3}"
+    s=$(get_signature "$u" "$4")
     l="${u}&_signature=${s}"
     print_info ">> Fetching item list: $l"
-    $_CURL -sS "$l" -H "User-Agent: $7"
+    $_CURL -sS "$l" -H "User-Agent: $4" -H "Cookie: $_COOKIE"
+}
+
+get_fp_token() {
+    $_CURL "$_HOST" -H "User-Agent: $_USER_AGENT"
 }
 
 main() {
@@ -269,27 +248,22 @@ main() {
     set_command
     set_var
 
-    local data uid region secuid maxcur res
+    local data uid secuid maxcur res
 
     data=$(get_user_data "$_USER_NAME")
-    [[ "$_SKIP_JSON_DATA" == false ]] && $_JQ -r <<< "$data" > "$_DATA_DIR/userdata.json"
+    [[ "$_SKIP_JSON_DATA" == false ]] && echo "$data" > "$_DATA_DIR/userdata.json"
 
-    uid=$($_JQ -r '.body.userData.userId' <<< "$data")
-    secuid=$($_JQ -r '.body.userData.secUid' <<< "$data")
-    appid=$($_JQ -r '.body.pageState.regionAppId' <<< "$data")
-    region=$($_JQ -r '.body.pageState.region' <<< "$data")
+    uid=$(json_path <<< "$data" | grep "author.id" | tail -1 | awk -F '"' '{print $2}')
+    secuid=$(json_path <<< "$data" | grep "author.secUid" | tail -1 | awk -F '"' '{print $2}')
     maxcur="0"
 
     print_info "id: $uid"
-    print_info "appId: $appid"
-    print_info "region: $region"
     print_info "secUid: $secuid"
-    print_info "verifyFP: $_VERIFYFP_TOKEN"
     print_info "user-agent: $_USER_AGENT"
 
     while true; do
         print_info "maxCursor: $maxcur"
-        res=$(get_item "$uid" "$appid" "$secuid" "$region" "$maxcur" "$_VERIFYFP_TOKEN" "$_USER_AGENT")
+        res=$(get_item "$uid" "$secuid" "$maxcur" "$_USER_AGENT")
         [[ -z "$res" ]] && print_error "Empty response!"
         if [[ $(is_item_list_empty "$res") == "no" ]]; then
             download_content "$res"
