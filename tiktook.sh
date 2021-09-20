@@ -150,7 +150,7 @@ is_item_list_empty() {
     # $1: item list json data
     local o
     o="yes"
-    [[ "$($_JQ -r '.body | has("itemListData")' <<< "$1")" == "true" ]] && o="no"
+    [[ "$($_JQ -r '.body.itemListData | length' <<< "$1")" -gt 0 ]] && o="no"
     echo "$o"
 }
 
@@ -267,7 +267,7 @@ main() {
         [[ -z "$res" ]] && print_error "Empty response!"
         if [[ $(is_item_list_empty "$res") == "no" ]]; then
             download_content "$res"
-            maxcur="$($_JQ -r '.maxCursor' <<< "$res")"
+            maxcur="$($_JQ -r '.body.maxCursor' <<< "$res")"
         else
             print_info "~ FIN ~"
             break
