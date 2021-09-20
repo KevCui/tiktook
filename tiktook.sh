@@ -211,12 +211,12 @@ get_user_data() {
     | grep '"props":' \
     | sed -E 's/.*\{"props"/{"props"/' \
     | sed -E 's/\}<.*/}/' \
-    | jq -r
+    | "$_JQ" -r
 }
 
 json_path() {
     # $1: JSON data
-    jq -r 'paths(scalars) as $p | "." + ([([$p[] | tostring] | join(".")), (getpath($p) | tojson)] | join(": "))'
+    "$_JQ" -r 'paths(scalars) as $p | "." + ([([$p[] | tostring] | join(".")), (getpath($p) | tojson)] | join(": "))'
 }
 
 get_signature() {
